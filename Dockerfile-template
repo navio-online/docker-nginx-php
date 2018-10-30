@@ -1,0 +1,15 @@
+FROM alpine:3.8
+
+
+## REPLACE ##
+
+
+RUN docker-php-ext-enable sodium \
+    && docker-php-ext-install iconv pdo_mysql pdo_sqlite mysqli gd exif intl xsl json soap dom zip opcache
+
+COPY files/ /
+
+EXPOSE 80 443
+
+WORKDIR "/var/www/html"
+CMD ["/start.sh"]

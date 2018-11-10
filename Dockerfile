@@ -1,4 +1,4 @@
-FROM php:7.2-fpm-alpine
+FROM php:7.2-fpm-alpine3.8
 
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 RUN apk add --no-cache --virtual .build-deps \
@@ -19,16 +19,22 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk add --no-cache \
        bash \
        sed \
+       vim \
+       git \
+       openssh-server \
+       openssh-client \
        nginx \
-       supervisor \
+       ca-certificates \
+       runit \
+       dumb-init \
        curl \
        libcurl \
        libpq \
        freetype \
        libxpm \
-    && docker-php-ext-configure gd --with-jpeg-dir \
-    --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir \
+    && docker-php-ext-configure gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir \
     && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv \
+    && cd /var/www \
     && wget https://elasticache-downloads.s3.amazonaws.com/ClusterClient/PHP-7.0/latest-64bit \
     && tar --no-same-owner -zxvf latest-64bit \
     && mv artifact/amazon-elasticache-cluster-client.so /usr/local/lib/php/extensions/no-debug-non-zts-20170718/ \
@@ -44,13 +50,31 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk add --virtual .wordpress-phpexts-rundeps $runDeps \
     && docker-php-ext-enable redis sodium \
     && docker-php-source delete \
-    && rm -rf /tmp/pear /var/www/html/latest-64bit /var/www/html/artifact\
-    && apk del .build-deps
+    && mkdir -p -m 0700 /var/lib/nginx/.ssh \
+    && echo "" > /var/lib/nginx/.ssh/config \
+    && echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /var/lib/nginx/.ssh/config \
+    && ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa \
+    && ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa \
+    && ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa \
+    && ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519 \
+    && chmod go-rwx /etc/ssh/ssh_host_rsa_key \
+    && chmod go-rwx /etc/ssh/ssh_host_dsa_key \
+    && chmod go-rwx /etc/ssh/ssh_host_ecdsa_key \
+    && chmod go-rwx /etc/ssh/ssh_host_ed25519_key \
+    && mkdir -p /var/run/sshd \
+    && rm -rf /tmp/pear /var/www/latest-64bit /var/www/artifact \
+    && rm -rf /var/cache/apk/* /opt/installer \
+    && rm -rf /usr/local/etc/php-fpm* \
+    && apk del .build-deps \
+    && echo -e "ea01609e5cc4407f\nea01609e5cc4407f" | passwd nginx
 
 COPY files/ /
 
-EXPOSE 80 443
+STOPSIGNAL SIGTERM
 
-WORKDIR "/var/www/html"
+EXPOSE 80 22
 
-CMD ["/start.sh"]
+WORKDIR "/var/www"
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/sbin/runsvdir", "-P", "/etc/service"]

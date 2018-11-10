@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cp /usr/local/etc/php/php.ini-${ENVIRONMENT} /usr/local/etc/php/php.ini
+cp /usr/local/etc/php-fpm.d/www.conf-${ENVIRONMENT} /usr/local/etc/php-fpm.d/www.conf
+
+/usr/local/sbin/php-fpm --force-stderr --nodaemonize -c /usr/local/etc/php/php.ini --fpm-config /usr/local/etc/php-fpm.conf

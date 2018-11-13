@@ -16,6 +16,7 @@ RUN apk add --no-cache --virtual .build-deps \
     freetype-dev \
     libxpm-dev \
     && pecl install -o -f redis \
+    && pecl install xdebug-2.6.0 \
     && apk add --no-cache \
        bash \
        sed \
@@ -66,13 +67,17 @@ RUN apk add --no-cache --virtual .build-deps \
     && rm -rf /var/cache/apk/* /opt/installer \
     && rm -rf /usr/local/etc/php-fpm* \
     && apk del .build-deps \
+    && adduser -D 'sftpuser' \
+    && echo -e "123\n123" | passwd sftpuser \
+    && chown -R sftpuser:sftpuser /var/www/* \
+    && chmod 775 -R /var/www/* \
     && echo -e "ea01609e5cc4407f\nea01609e5cc4407f" | passwd nginx
 
 COPY files/ /
 
 STOPSIGNAL SIGTERM
 
-EXPOSE 80 22
+EXPOSE 80 22 9000
 
 WORKDIR "/var/www"
 

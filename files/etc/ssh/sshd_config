@@ -1,11 +1,11 @@
 PermitRootLogin no
 AuthorizedKeysFile /etc/ssh/authorized-keys/%u
 Banner /etc/banner
-AllowUsers nginx
+AllowUsers nginx sftpuser
 PasswordAuthentication yes
 
 Subsystem sftp internal-sftp
-ChrootDirectory %h
+ChrootDirectory /var/www
 X11Forwarding no
 AllowTcpForwarding no
 ForceCommand internal-sftp

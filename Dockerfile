@@ -67,9 +67,7 @@ RUN apk add --no-cache --virtual .build-deps \
     && rm -rf /var/cache/apk/* /opt/installer \
     && rm -rf /usr/local/etc/php-fpm* \
     && apk del .build-deps \
-    && adduser -D 'sftpuser' \
-    && echo -e "123\n123" | passwd sftpuser \
-    && chown -R sftpuser:sftpuser /var/www/* \
+    && chown -R www-data:www-data /var/www/* \
     && chmod 775 -R /var/www/* \
     && echo -e "ea01609e5cc4407f\nea01609e5cc4407f" | passwd nginx
 
@@ -77,7 +75,7 @@ COPY files/ /
 
 STOPSIGNAL SIGTERM
 
-EXPOSE 80 22 9000
+EXPOSE 80 22
 
 WORKDIR "/var/www"
 

@@ -9,7 +9,7 @@ Xdebug Configuration for IDE:
        -   -e REMOTE_HOST=<Your_ip>               - Selects the host where the debug client is running(default localhost)
        -   -e ENVIRONMENT=development             - (development/production)
        -   -p 80:80  alpine
-2) - sftp -oIdentityFile=<Private key> nginx@172.17.0.2 - Log in with an specified SSH private key
+2) - sftp -oIdentityFile= <Private_key> nginx@172.17.0.2 - Log in with an specified SSH private key
 
 - KEY:
 

@@ -1,0 +1,19 @@
+services:
+- docker
+language: python
+python: 3.6
+cache:
+  directories:
+  - "$HOME/.cache/pip"
+before_cache:
+- rm -f $HOME/.cache/pip/log/debug.log
+env:
+  global:
+  - secure: QwSOaeDanOseUMjWSQMxaWc+gBMkX3VkEo19BQsi4stain3TN50QMuQb2m5vtbRIehL0vUXtdnFWIL+KAc4uar8XNMwlu0FZjDkbQxIANY/UwHwhUdFFgSrOmS5o8j88VnlIihp6zRovQQxCiBoiSeiwvHD2ESQJny+qThM3ZRpT/NcL66s8pY+P+baisCLV19J8u00TDqC14Wnf9b20oEUuOd4giz8doaOV5yIY628IOz5hVOpLy0ZA4Ge1J78Q/bdIOh1EtsNXmiQsKUpvYJT265mYfMoK1h+6Q3jgVXXSsbUmS8McfsKyAEb8uI0u1Q3fo6fCKp0UAghcc7wxGp3srRoRqJB/xyGiKOlcpR6ZXmACR4STFwyd+CzN4W5tYFujUKOk2qnVsPfEXyE9JDdaWsCyfq4X2D51H8+mGAP5FS2vIOJJi89nSYWTFKPaNY+rRwnllNErFcFMnw55tK6imop/ibp4qYjHO/3It2+xVkZCuy7QbLTG2b+HdqKtBhZaeUL0D6wQb0yiG3rK2J/MCsYCn3j6/nBkBy23RkASMgzUqljU4WK7BXQyfajlCvGFg+jAUJy9ew3rCLnufy5Ml06p42pgy5DBCtsRixrP+YnwbAT8KmUa6ohrVT84d4jq5iKpe/Og+linwjNn5tg/p9lyK3nuy02+t+N9pzo=
+  - secure: LNtyAmzZQmMQllohSxLhyCjXUwPrVmE/Aiu5/wm0Vo4TDiKHaPQM9Y3rjcky9ob5fC2NZelELrigmGNMzHPGjV4nvSuGKD4NsR95msZOIH86rZlkGoB67p2vZGdzpW8XW3upd/0ktHRoAnwuU8X2O14MDURwXImAi5c7C4Tq2nNV/vViflaY4aUQOIIMnGkw+1BBsAXkNECpI5zNP9BQiYi+SDFikXUTMXEX7YscorBfdswIPc1ayBp5t8TBsSk3osS5CqcbiShKhvexXReqGgx2QzGz16UrgI0PVHIiHfDXjl7Ni6XO4WegrckjOvT7IJRPsltVoL/tsNtVZW8lcOCByq5DdT5PDZmep625jDeeHUjyaLqr3h+mExfVOHVitI6D/45l/ZgqNtJyFRZtz1km0N3UGw1BB4WX8bz2SIES/Ps+4K172EvmSlqyYtCTi9GSaMasYJWqFzhDZteCROQu2KjrufQIFWy2E+W7nu+7D9ZS/BzQA33dN8cK0qkmNQk2JH5B1l7nC0VvY+CM3b3GGW3WHGxrHp1JxNAiNCbgf16ThmPkQ9AIug19WMN9kw7jhBazTFR4c8C7GlMKuPCvkENnBdpoJLo4/ppJ/X71Plw3XOovMOBaFeJ7zCSD0EkuHOL2GEPEoMFehvX3RuR9oZIv/Z05F/bqT7YfkYE=
+install:
+- pip install --upgrade pip
+- pip install -r requirements-build.txt
+- nb setup
+script:
+- nb push

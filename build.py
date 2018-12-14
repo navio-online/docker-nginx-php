@@ -1,26 +1,108 @@
-from navio.builder import task,nsh, sh, dump
+from navio.builder import task, nsh, sh
+from navio.travis import Travis
+import os, re
+
+travis = Travis().is_travis()
+branch = Travis().branch()
+
+Config = {
+  'master': {
+    'docker_tag': 'latest',
+  },
+}
+
+@task()
+def setup():
+  nsh.env()
+  nsh.docker('login', '-u', os.environ.get('DOCKER_HUB_USER'), '-p', os.environ.get('DOCKER_HUB_PASS'))
+
+@task()
+def build():
+  nsh.docker('build --rm=true -t alpine-nginx-phpfpm .'.split(' '))
+
+@task(build)
+def push():
+  if Travis().is_pull_request():
+    print("Skipping docker image push for push requests")
+    return
+
+  if branch not in Config and not Travis().is_tag():
+    print("Skipping docker image push for unconfigured branch")
+    return
+
+  if Travis().is_tag():
+    print('Pushing navioonline/alpine-nginx-phpfpm:{tag}'.format(tag=Travis().tag()))
+    nsh.docker.tag(
+        'alpine-nginx-phpfpm:latest', 
+        'navioonline/alpine-nginx-phpfpm:{tag}'.format(tag=Travis().tag())
+      )
+    nsh.docker.push(
+        'navioonline/alpine-nginx-phpfpm:{tag}'.format(tag=Travis().tag())
+      )
+  else:
+    print('Pushing navioonline/alpine-nginx-phpfpm:{tag}'.format(tag=Config[branch]['docker_tag']))
+    nsh.docker.tag(
+        'alpine-nginx-phpfpm:latest', 
+        'navioonline/alpine-nginx-phpfpm:{tag}'.format(tag=Config[branch]['docker_tag'])
+      )
+    nsh.docker.push(
+        'navioonline/alpine-nginx-phpfpm:{tag}'.format(tag=Config[branch]['docker_tag'])
+      )
+
+@task()
+def check_uncommited():
+    result = sh.git('status', '--porcelain', '--untracked-files=no')
+    if result:
+        raise Exception('There are uncommited files')
+
+@task()
+def update_version(ver=None):
+    with open('meta.py', 'r') as f:
+      file_str = f.read()
+
+    if not ver:
+      regexp = re.compile(r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
+      m = regexp.search(file_str)
+      if m:
+        ver = m.group(1)
+
+    minor_ver = int(ver[ver.rfind('.') + 1:])
+    ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver + 1)
+
+    file_str = re.sub(
+      r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*',
+      r'__version__ = "{}"\n'.format(ver),
+      file_str)
+
+    with open('meta.py', 'w') as f:
+      f.write(file_str)
+
+    nsh.git('commit', 'meta.py', '-m', 'Version updated to {}'.format(ver))
 
 
 @task()
-def docker_login():
-  docker_login = sh.aws('ecr get-login --profile shoeshiii --no-include-email'.split(' ')).strip()[7:].split(' ')
-  nsh.docker(docker_login)
+def create_tag():
+    with open('meta.py', 'r') as f:
+        file_str = f.read()
+    regexp = re.compile(r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
+    m = regexp.search(file_str)
+    if m:
+        ver = m.group(1)
+    else:
+        raise "Can't find/parse current version in 'meta.py'"
 
-@task(docker_login)
-def build():
-  nsh.docker('build --rm=true -t nginx-php .'.split(' '))
+    nsh.git('tag', '-a', '-m', 'Tagging version {}'.format(ver), ver)
 
-@task(docker_login)
-def push():
-  nsh.docker.tag(
-      'nginx-php:latest', 
-      '688592707036.dkr.ecr.eu-west-1.amazonaws.com/nginx-php:latest'
-    )
-  nsh.docker.push(
-      '688592707036.dkr.ecr.eu-west-1.amazonaws.com/nginx-php:latest'
-    )
 
-@task(docker_login)
-def pull():
-  nsh.docker.pull('688592707036.dkr.ecr.eu-west-1.amazonaws.com/nginx-php:latest')
+@task()
+def push_git():
+  nsh.git('push', '--verbose')
+  nsh.git('push', '--tags', '--verbose')
 
+
+@task()
+def release(ver=None):
+  check_uncommited()
+  update_version(ver)
+  create_tag()
+  push_git()

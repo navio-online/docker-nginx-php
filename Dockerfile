@@ -1,7 +1,8 @@
-FROM php:7.2-fpm-alpine3.8
+FROM php:7.0.32-fpm-alpine3.7
 
-ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
-RUN apk add --no-cache --virtual .build-deps \
+ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
+RUN set -ex; \
+    apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
     argon2-dev \
     coreutils \
@@ -15,12 +16,24 @@ RUN apk add --no-cache --virtual .build-deps \
     libpng-dev \
     freetype-dev \
     libxpm-dev \
+    libmcrypt-dev \
+    bzip2-dev \
+    gettext-dev \
+    gmp-dev \
+    libxslt-dev \
+    && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv \
+    && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community php7-pecl-igbinary \
+    && pecl channel-update pecl.php.net \
+    && pecl install -o -f igbinary \
+    && pecl install -o -f xdebug \
+    && pecl install -o -f mcrypt \
     && pecl install -o -f redis \
     && apk add --no-cache \
        bash \
        sed \
        vim \
        git \
+       python3 \
        openssh-server \
        openssh-client \
        nginx \
@@ -32,14 +45,16 @@ RUN apk add --no-cache --virtual .build-deps \
        libpq \
        freetype \
        libxpm \
-    && docker-php-ext-configure gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir \
-    && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv \
+       shadow \
+    && pip3 install --upgrade pip \
+    && pip3 install --upgrade awscli \
     && cd /var/www \
     && wget https://elasticache-downloads.s3.amazonaws.com/ClusterClient/PHP-7.0/latest-64bit \
     && tar --no-same-owner -zxvf latest-64bit \
     && mv artifact/amazon-elasticache-cluster-client.so /usr/local/lib/php/extensions/no-debug-non-zts-20170718/ \
     && echo "extension=amazon-elasticache-cluster-client.so" | tee -a /usr/local/etc/php/conf.d/elasticache \
-    && docker-php-ext-install gd mysqli opcache zip \
+    && docker-php-ext-configure gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir \
+    && docker-php-ext-install gd mysqli opcache zip bz2 exif gettext gmp shmop soap sysvmsg sysvsem sysvshm xsl \
     && runDeps="$( \
         scanelf --needed --nobanner --recursive /usr/local \
                 | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
@@ -48,25 +63,28 @@ RUN apk add --no-cache --virtual .build-deps \
                 | sort -u \
     )" \
     && apk add --virtual .wordpress-phpexts-rundeps $runDeps \
-    && docker-php-ext-enable redis sodium \
+    && docker-php-ext-enable redis sodium gd mysqli opcache zip bz2 exif gettext gmp igbinary mcrypt shmop soap sysvmsg sysvsem sysvshm xsl \
     && docker-php-source delete \
-    && mkdir -p -m 0700 /var/lib/nginx/.ssh \
-    && echo "" > /var/lib/nginx/.ssh/config \
-    && echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /var/lib/nginx/.ssh/config \
+    && mkdir -p /var/run/sshd \
     && ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa \
     && ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa \
     && ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa \
     && ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519 \
     && chmod go-rwx /etc/ssh/ssh_host_rsa_key \
-    && chmod go-rwx /etc/ssh/ssh_host_dsa_key \
-    && chmod go-rwx /etc/ssh/ssh_host_ecdsa_key \
-    && chmod go-rwx /etc/ssh/ssh_host_ed25519_key \
-    && mkdir -p /var/run/sshd \
-    && rm -rf /tmp/pear /var/www/latest-64bit /var/www/artifact \
+                    /etc/ssh/ssh_host_dsa_key \
+                    /etc/ssh/ssh_host_ecdsa_key \
+                    /etc/ssh/ssh_host_ed25519_key \
+    && mkdir -p /var/www/.ssh \
+    && touch /var/www/.ssh/authorized-keys \
+    && chmod -R go-rwx /var/www/.ssh \
+    && chown root:root /var /var/www \
+    && chown nginx:nginx /var/www/.ssh /var/www/.ssh/authorized-keys \
+    && chown nginx:nginx /var/www/html \
+    && rm -rf /tmp/pear /var/www/latest-64bit /var/www/artifact /var/www/localhost \
     && rm -rf /var/cache/apk/* /opt/installer \
     && rm -rf /usr/local/etc/php-fpm* \
-    && apk del .build-deps \
-    && echo -e "ea01609e5cc4407f\nea01609e5cc4407f" | passwd nginx
+    && apk del .build-deps
+
 
 COPY files/ /
 
@@ -77,4 +95,5 @@ EXPOSE 80 22
 WORKDIR "/var/www"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/sbin/runsvdir", "-P", "/etc/service"]
+
+CMD ["/start.sh"]

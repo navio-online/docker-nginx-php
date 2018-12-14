@@ -16,4 +16,4 @@ install:
 - pip install -r requirements-build.txt
 - nb setup
 script:
-- nb push
+- PYTHONUNBUFFERED=TRUE nb push

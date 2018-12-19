@@ -4,7 +4,7 @@ ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
 RUN set -ex; \
     apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
-    argon2-dev \
+    #argon2-dev \
     coreutils \
     curl-dev \
     libedit-dev \
@@ -23,11 +23,13 @@ RUN set -ex; \
     libxslt-dev \
     && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv \
     && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community php7-pecl-igbinary \
+    && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/main argon2-dev \
     && pecl channel-update pecl.php.net \
     && pecl install -o -f igbinary \
     && pecl install -o -f xdebug \
     && pecl install -o -f mcrypt \
     && pecl install -o -f redis \
+    && pecl install -o -f libsodium \
     && apk add --no-cache \
        bash \
        sed \
@@ -51,7 +53,7 @@ RUN set -ex; \
     && cd /var/www \
     && wget https://elasticache-downloads.s3.amazonaws.com/ClusterClient/PHP-7.0/latest-64bit \
     && tar --no-same-owner -zxvf latest-64bit \
-    && mv artifact/amazon-elasticache-cluster-client.so /usr/local/lib/php/extensions/no-debug-non-zts-20170718/ \
+    && mv artifact/amazon-elasticache-cluster-client.so /usr/local/lib/php/extensions/no-debug-non-zts-20151012/ \
     && echo "extension=amazon-elasticache-cluster-client.so" | tee -a /usr/local/etc/php/conf.d/elasticache \
     && docker-php-ext-configure gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir \
     && docker-php-ext-install gd mysqli opcache zip bz2 exif gettext gmp shmop soap sysvmsg sysvsem sysvshm xsl \

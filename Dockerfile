@@ -24,6 +24,7 @@ RUN set -ex; \
     && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv \
     && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community php7-pecl-igbinary \
     && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/main argon2-dev \
+    && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/main apk-cron \
     && pecl channel-update pecl.php.net \
     && pecl install -o -f igbinary \
     && pecl install -o -f xdebug \
@@ -79,6 +80,7 @@ RUN set -ex; \
     && mkdir -p /var/www/.ssh \
     && touch /var/www/.ssh/authorized-keys \
     && chmod -R go-rwx /var/www/.ssh \
+    && touch /var/log/script.log \
     && chown root:root /var /var/www \
     && chown nginx:nginx /var/www/.ssh /var/www/.ssh/authorized-keys \
     && chown nginx:nginx /var/www/html \

@@ -1,0 +1,1 @@
+#Example: */1 * * * * /etc/crontabs/job_script.sh >> /var/log/script.log

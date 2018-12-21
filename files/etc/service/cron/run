@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Conf. job and start cron
-/usr/bin/crontab /etc/crontabs/job_conf && /usr/sbin/crond -b -l 8
+/usr/bin/crontab /etc/crontab && /usr/sbin/crond -b -l 8

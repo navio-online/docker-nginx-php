@@ -60,17 +60,18 @@ def update_version(ver=None):
       file_str = f.read()
 
     if not ver:
+      print('ver is none')
       regexp = re.compile(r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
       m = regexp.search(file_str)
       if m:
         ver = m.group(1)
 
       minor_ver = int(ver[ver.rfind('.') + 1:])
-      ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver)
+      ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver + 1)
     else:
       minor_ver = int(ver[ver.rfind('.') + 1:])
-      ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver + 1)
-      
+      ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver)
+
     file_str = re.sub(
       r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*',
       r'__version__ = "{}"\n'.format(ver),

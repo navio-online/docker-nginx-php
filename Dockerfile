@@ -87,6 +87,7 @@ RUN set -ex; \
     && rm -rf /tmp/pear /var/www/latest-64bit /var/www/artifact /var/www/localhost \
     && rm -rf /var/cache/apk/* /opt/installer \
     && rm -rf /usr/local/etc/php-fpm* \
+    && rm -rf /root/.cache/pip \
     && apk del .build-deps
 
 

@@ -59,7 +59,7 @@ def update_version(ver=None):
     with open('meta.py', 'r') as f:
       file_str = f.read()
 
-    if not ver:
+    if ver is None:
       print('ver is none')
       regexp = re.compile(r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
       m = regexp.search(file_str)

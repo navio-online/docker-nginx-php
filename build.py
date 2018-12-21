@@ -79,6 +79,7 @@ def update_version(ver=None):
 
     with open('meta.py', 'w') as f:
       f.write(file_str)
+      f.flush()
 
     nsh.git('commit', 'meta.py', '-m', 'Version updated to {}'.format(ver))
 

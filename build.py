@@ -65,9 +65,12 @@ def update_version(ver=None):
       if m:
         ver = m.group(1)
 
-    minor_ver = int(ver[ver.rfind('.') + 1:])
-    ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver + 1)
-
+      minor_ver = int(ver[ver.rfind('.') + 1:])
+      ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver)
+    else:
+      minor_ver = int(ver[ver.rfind('.') + 1:])
+      ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver + 1)
+      
     file_str = re.sub(
       r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*',
       r'__version__ = "{}"\n'.format(ver),

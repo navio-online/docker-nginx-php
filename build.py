@@ -78,6 +78,7 @@ def update_version(ver=None):
       file_str)
 
     with open('meta.py', 'w') as f:
+      print('writing to meta.py: {}'.format(file_str))
       f.write(file_str)
       f.flush()
 
